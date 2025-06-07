@@ -68,6 +68,8 @@ class DatePicker extends StatefulWidget {
   /// Locale for the calendar default: en_us
   final String locale;
 
+  final bool isReversed;
+
   DatePicker(
       this.startDate, {
         Key? key,
@@ -88,6 +90,7 @@ class DatePicker extends StatefulWidget {
         this.locale = "en_US",
         this.calendarType = CalendarType.gregorianDate,
         this.directionality,
+        this.isReversed = false,
       }) : assert(
   activeDates == null || inactiveDates == null,
   "Can't "
@@ -135,6 +138,13 @@ class _DatePickerState extends State<DatePicker> {
         widget.dayTextStyle.copyWith(color: widget.deactivatedColor);
 
     super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (widget.isReversed) {
+        _controller.jumpTo(_controller.position.maxScrollExtent);
+      } else {
+        widget.controller?.jumpToSelection(); // default forward behavior
+      }
+    });
   }
 
   @override
@@ -148,12 +158,13 @@ class _DatePickerState extends State<DatePicker> {
         child: ListView.builder(
           itemCount: widget.daysCount,
           scrollDirection: Axis.horizontal,
+          reverse: widget.isReversed,
           controller: _controller,
           itemBuilder: (context, index) {
             // get the date object based on the index position
             // if widget.startDate is null then use the initialDateValue
             DateTime date;
-            DateTime _date = widget.startDate.add(Duration(days: index));
+            DateTime _date =  widget.startDate.add(Duration(days: index));
             switch (widget.calendarType) {
               case CalendarType.persianDate:
                 date = PersianDate.toJalali(_date.year, _date.month, _date.day);
